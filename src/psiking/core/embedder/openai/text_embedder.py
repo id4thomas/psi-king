@@ -1,6 +1,7 @@
 import json
 from typing import List, Literal, Optional, Union, TYPE_CHECKING
 
+from tqdm import tqdm
 # TODO - Implement retry
 # import backoff
 
@@ -80,17 +81,29 @@ class OpenAITextEmbedder(BaseEmbedder):
         texts: List[str],
         model: str = "text-embedding-3-small",
         batch_size: int = 4,
-        dimensions: Optional[int] = None
+        dimensions: Optional[int] = None,
+        show_tqdm: bool = False
     ):
         embeddings = []
-        for i in range(0, len(texts), batch_size):
-            batch = texts[i:i+batch_size]
-            batch_embeddings = self._embed(
-                texts=batch,
-                model=model,
-                dimensions=dimensions
-            )
-            embeddings.extend(batch_embeddings)
+        if show_tqdm:
+            for i in tqdm(range(0, len(texts), batch_size)):
+                batch = texts[i:i+batch_size]
+                batch_embeddings = self._embed(
+                    texts=batch,
+                    model=model,
+                    dimensions=dimensions
+                )
+                embeddings.extend(batch_embeddings)
+        else:
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i+batch_size]
+                batch_embeddings = self._embed(
+                    texts=batch,
+                    model=model,
+                    dimensions=dimensions
+                )
+                embeddings.extend(batch_embeddings)
+            
         return embeddings
 
     async def arun(
