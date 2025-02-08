@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, List, Optional, Tuple, Union, TYPE_CHECKING
 
 from grpc import RpcError
 
@@ -67,6 +67,7 @@ class BaseQdrantVectorStore(BaseVectorStore):
         try:
             self._client.create_collection(
                 collection_name=self.collection_name,
+                *args,
                 **kwargs
             )
         except (RpcError, ValueError, UnexpectedResponse) as exc:
@@ -81,24 +82,47 @@ class BaseQdrantVectorStore(BaseVectorStore):
         try:
             self._aclient.create_collection(
                 collection_name=self.collection_name,
+                *args,
+                **kwargs
             )
         except (RpcError, ValueError, UnexpectedResponse) as exc:
             if "already exists" not in str(exc):
                 raise exc  # noqa: TRY201
             raise ValueError(f"Collection {self.collection_name} already exists")
         
-    def create(self, **kwargs):
+    def create_collection(self, **kwargs):
         if self._collection_initialized:
             raise ValueError(f"Collection {self.collection_name} already exists")
         self._create_collection(**kwargs)
         self._collection_initialized = True
         
-    async def acreate(self, **kwargs):
+    async def acreate_collection(self, **kwargs):
         if self._collection_initialized:
             raise ValueError(f"Collection {self.collection_name} already exists")
         self._acreate_collection(**kwargs)
         self._collection_initialized = True
         
+    def _create_payload_index(self, field_name: str, field_schema: str, **kwargs):
+        """
+        Create payload index, vector indicies must be created with create_collection
+        https://qdrant.tech/documentation/concepts/indexing
+        """
+        self._client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name=field_name,
+            field_schema=field_schema,
+            **kwargs
+        )
+        
+    def create_index(self, field_name: str, field_schema: Any, **kwargs):
+        if not self._collection_initialized:
+            raise ValueError(f"Collection {self.collection_name} is not initialized")
+        
+        self._create_payload_index(field_name=field_name, field_schema=field_schema, **kwargs)
+        
+    async def acreate_index(self, **kwargs):
+        pass
+
     def _build_points(self):
         raise NotImplementedError()
     

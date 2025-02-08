@@ -127,25 +127,3 @@ class QdrantSingleVectorStore(BaseQdrantVectorStore):
 
     def drop(self):
         pass
-    
-# TODO - Implement Hybrid version
-class QdrantHybridLateInteractionVectorStore(BaseVectorStore):
-    """qdrant based vectorstore for late-interaction (colbert/colpali) + sparse"""
-    
-    def __init__(self):
-        pass
-
-    def add(self):
-        pass
-    
-    async def aadd(self):
-        pass
-    
-    def delete(self):
-        pass
-    
-    def query(self):
-        pass
-
-    def drop(self):
-        pass
