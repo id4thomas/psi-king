@@ -23,6 +23,16 @@
 | 2_2_beir_ingestion_hybrid | indexing for hybrid search using bge-m3 + BM42 | [link](./2_2_beir_ingestion_hybrid.ipynb) |
 | 2_3_beir_ingestion_late_interaction | indexing for late-interaction search using colbert | [link](./2_3_beir_ingestion_late_interaction.ipynb) |
 
+### details
+**2_3_beir_ingestion_late_interaction**
+
+colbert model: `sigridjineth/ModernBERT-Korean-ColBERT-preview-v1`
+* https://huggingface.co/sigridjineth/ModernBERT-Korean-ColBERT-preview-v1
+    * ModernBERT based model
+* uses `pylate` package
+    * https://github.com/lightonai/pylate
+
+
 ## 3. allganize/rag-evaluation dataset example
 * examples of dealing with multimodal real-world PDF files
 * `allganize/RAG-Evaluation-Dataset-KO` dataset [hflink](https://huggingface.co/datasets/allganize/RAG-Evaluation-Dataset-KO)

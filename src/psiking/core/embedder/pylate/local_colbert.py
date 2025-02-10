@@ -1,5 +1,7 @@
 from typing import List, Literal, Optional, Tuple, Union, TYPE_CHECKING
 
+from core.embedder.base import BaseEmbedder
+
 if TYPE_CHECKING:
     import numpy as np
     from pylate.models import ColBERT
@@ -44,7 +46,7 @@ class LocalPylateColBERTEmbedder(BaseEmbedder):
         args, kwargs available here
         https://github.com/lightonai/pylate/blob/fe115ff8bd93351670d516859952804ced1198f7/pylate/models/colbert.py#L384
         """
-        embeddings = self.model.embed(
+        embeddings = self.model.encode(
             texts,
             batch_size=batch_size,
             is_query=is_query,
