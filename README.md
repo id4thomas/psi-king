@@ -9,13 +9,13 @@ framework for building multi-modal first document retriever
 
 ### Concepts
 **Document / Node (TextNode, ImageNode, TableNode)**
-![document](docs/figs/main_document_temp.png)
+![document](docs/figs/main_document.png)
 * a `Document` contains a list of nodes (`document.nodes`)
-* each of these can be one of the following
+* each node can be one of the following types
     * `TextNode`
     * `ImageNode`
     * `TableNode`
-* schemas are defined [here](src/psiking/core)
+* schemas are defined [here](src/psiking/core/base/schema.py)
 
 ![nodes](docs/figs/main_node_temp.png)
 
