@@ -75,7 +75,7 @@ class LocalColpaliEngineEmbedder(BaseEmbedder):
             with torch.no_grad():
                 processed_queries = self.processor.process_queries(
                     batch_queries
-                ).to(self.model.device)
+                ).to(self.model.dtype).to(self.model.device)
                 batch_embeddings = self.model(**processed_queries)
                 del processed_queries
                 batch_embeddings = batch_embeddings.cpu().detach().tolist()
@@ -85,7 +85,8 @@ class LocalColpaliEngineEmbedder(BaseEmbedder):
     def embed_images(
         self,
         images: List[Image.Image],
-        batch_size: int = 4
+        batch_size: int = 4,
+        **kwargs
     ) -> List[List[List[float]]]:
         """
         Embed a list of images using batching.
@@ -104,7 +105,7 @@ class LocalColpaliEngineEmbedder(BaseEmbedder):
             with torch.no_grad():
                 processed_images = self.processor.process_images(
                     batch_images
-                ).to(self.model.device)
+                ).to(self.model.dtype).to(self.model.device)
                 # print(processed_images['input_ids'].shape)
                 batch_embeddings = self.model(**processed_images)
                 del processed_images
@@ -131,15 +132,16 @@ class LocalColpaliEngineEmbedder(BaseEmbedder):
         queries: Optional[List[str]] = None,
         nodes: Optional[List["ImageNode"]] = None,
         mode: Literal["image", "query"] = "image",
-        batch_size: int = 4
+        batch_size: int = 4,
+        **kwargs
     ):
         if mode=="image":
             images: List[Image.Image] = self._get_images_from_nodes(
                 nodes
             )
-            embeddings = self.embed_images(images, batch_size=batch_size)
+            embeddings = self.embed_images(images, batch_size=batch_size, **kwargs)
         elif mode=="query":
-            embeddings = self.embed_queries(queries, batch_size=batch_size)
+            embeddings = self.embed_queries(queries, batch_size=batch_size, **kwargs)
         else:
             raise ValueError("mode must be one of image, query")
         return embeddings
