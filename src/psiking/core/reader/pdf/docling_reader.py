@@ -160,11 +160,13 @@ class DoclingPDFReader(BaseReader):
         else:
             label = TextLabel.PLAIN
 
-        # TODO: properly apply label
+        # TODO: properly apply metadata
+        if len(item.prov)>0:
+            page_no = item.prov[0].page_no
+        else:
+            page_no = -1
         metadata = {
-            # "page_no": item.prov[0].get("page_no", 1),
-            # "file_name": item.prov[0].get("file_name", ""),
-            # "file_path": item.prov[0].get("file_path", ""),
+            "page_no": page_no
         }
         return TextNode(
             text = text,
@@ -184,11 +186,14 @@ class DoclingPDFReader(BaseReader):
         base64_data = uri.split(",", 1)[1]
         # Decode the Base64 data to bytes
         binary_data = base64.b64decode(base64_data)
+        
         # TODO: add metadata
+        if len(item.prov)>0:
+            page_no = item.prov[0].page_no
+        else:
+            page_no = -1
         metadata = {
-            # "page_no": item.prov[0].get("page_no", 1),
-            # "file_name": item.prov[0].get("file_name", ""),
-            # "file_path": item.prov[0].get("file_path", ""),
+            "page_no": page_no
         }
         return ImageNode(
             image_resource=MediaResource(data=binary_data, mimetype=item.image.mimetype),
@@ -207,10 +212,12 @@ class DoclingPDFReader(BaseReader):
         base64_data = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
         # TODO: add metadata
+        if len(item.prov)>0:
+            page_no = item.prov[0].page_no
+        else:
+            page_no = -1
         metadata = {
-            # "page_no": item.prov[0].get("page_no", 1),
-            # "file_name": item.prov[0].get("file_name", ""),
-            # "file_path": item.prov[0].get("file_path", ""),
+            "page_no": page_no
         }
         return TableNode(
             table_type=TableType.HTML,
@@ -385,45 +392,6 @@ class DoclingPDFReader(BaseReader):
                 if node is None:
                     continue
                 nodes.append(node)
-        # # Get Docling Items
-        # body_items = []
-        # for item in docling_document.body.children:
-        #     if "groups" in item.cref:
-        #         group_item = self._get_groupitem_by_cref(item.cref, docling_document)
-        #         items = self._flatten_groupitem(group_item, docling_document)
-        #         body_items.extend(items)
-        #         continue
-        #     elif "texts" in item.cref:
-        #         item = self._get_textitem_by_cref(item.cref, docling_document)
-        #     elif "picture" in item.cref:
-        #         item = self._get_pictureitem_by_cref(item.cref, docling_document)
-        #     elif "tables" in item.cref:
-        #         item = self._get_tableitem_by_cref(item.cref, docling_document)
-        #     else:
-        #         raise ValueError(f"Unknown item type: {item.cref}")
-        #     body_items.append(item)
-                
-        # # Convert Docling Items to Nodes
-        # nodes = []
-        # for item in body_items:
-        #     if isinstance(item, TextItem):
-        #         node = self._textitem_to_node(item)
-        #         if node is None:
-        #             continue
-        #         nodes.append(node)
-        #     elif isinstance(item, PictureItem):
-        #         node = self._imageitem_to_node(item)
-        #         if node is None:
-        #             continue
-        #         nodes.append(node)
-        #     elif isinstance(item, TableItem):
-        #         node = self._tableitem_to_node(item, docling_document)
-        #         if node is None:
-        #             continue
-        #         nodes.append(node)
-        #     else:
-        #         raise ValueError(f"Unknown item type: {item}")
-        
         # TODO: configure metadata
         
         # Create Document
