@@ -187,6 +187,14 @@ class DoclingPDFReader(BaseReader):
         # Decode the Base64 data to bytes
         binary_data = base64.b64decode(base64_data)
         
+        # Check for text annotations 
+        # example:
+        # [PictureDescriptionData(kind='description', text='description here', provenance='not-implemented')]
+        text = item.annotations[0].text if item.annotations else ""
+        
+        # Check for caption
+        caption = item.caption_text(doc=document)
+
         # TODO: add metadata
         if len(item.prov)>0:
             page_no = item.prov[0].page_no
@@ -196,6 +204,8 @@ class DoclingPDFReader(BaseReader):
             "page_no": page_no
         }
         return ImageNode(
+            text_resource=MediaResource(text=text),
+            caption_resource=MediaResource(text=caption),
             image_resource=MediaResource(data=binary_data, mimetype=item.image.mimetype),
             metadata=metadata
         )
