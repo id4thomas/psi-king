@@ -178,6 +178,7 @@ class DoclingPDFReader(BaseReader):
     def _imageitem_to_node(cls, item: "PictureItem", document: "DoclingDocument") -> ImageNode:
         # Filter small images
         # TODO: make filtering option configurable
+        # maybe utilize coverage ratio? https://github.com/DS4SD/docling/blob/e1436a8b0574e6bb2bb89bd65e98221e418d7142/docling/models/base_ocr_model.py#L32
         image = item.get_image(document)
         if image.width * image.height < 5000:
             return None
