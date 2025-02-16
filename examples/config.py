@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     )
     data_dir: str
     
+    vlm_base_url: str
+    vlm_api_key: str
+    vlm_model: str
+    
     model_weight_dir: str
     
     openai_embedding_base_url: str
