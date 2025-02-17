@@ -41,4 +41,6 @@ colbert model: `sigridjineth/ModernBERT-Korean-ColBERT-preview-v1`
 **Notebooks**:
 | title | description | link |
 | --- | --- | --- |
-| 3_ | ingestion example | [link]() |
+| 3_1_allganize_ingestion_colpali | pdf2image + `colSmol-500M` for colpali style late-interaction | [link](./3_1_allganize_ingestion_colpali.ipynb) |
+| 3_2_allganize_ingestion_multimodal | docling reader + `bge-visualized` for dense-only multimodal embedding | [link](./3_2_allganize_ingestion_multimodal.ipynb) |
+| 3_3_allganize_ingestion_multimodal_hybrid | docling reader (pdf2image fallback) + `bge-visualized` + `qdrant/bm42` for hybrid multimodal embedding | [link](./3_3_allganize_ingestion_multimodal_hybrid.ipynb) |

@@ -1,4 +1,6 @@
 # PSI-King Core
+## Schemas
+![nodes](figs/main_node_temp.png)
 
 ## Structure
 Folder Structure:
