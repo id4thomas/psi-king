@@ -1,5 +1,16 @@
 # Qdrant + CJK
-cjk (chinese, japanese, korean) tokenization support with qdrant
+* cjk (chinese, japanese, korean) tokenization support with qdrant
+
+## building with feature flags
+* CJK support is not enabled by default, but can be enabled by building qdrant from source with --features 
+
+Building qdrant docker image with features
+```
+QDRANT_VERSION="v1.13.2"
+docker build . \
+    --build-arg FEATURES="multiling-chinese,multiling-japanese,multiling-korean" \
+    --tag=qdrant/qdrant:${QDRANT_VERSION}-cjk
+```
 
 ## Creating Collection
 **full-text index**
@@ -45,17 +56,6 @@ client.create_payload_index(
         tokenizer=models.TokenizerType.MULTILINGUAL,
     ),
 )
-```
-
-## building qdrant
-* CJK support is not enabled by default, but can be enabled by building qdrant from source with --features 
-
-Building qdrant docker image with features
-```
-QDRANT_VERSION="v1.13.2"
-docker build . \
-    --build-arg FEATURES="multiling-chinese,multiling-japanese,multiling-korean" \
-    --tag=qdrant/qdrant:${QDRANT_VERSION}-cjk
 ```
 
 ## Resources
