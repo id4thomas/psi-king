@@ -31,18 +31,17 @@ RUN set -eux; \
         automake \
         zlib1g-dev; \
     apt-get install -y postgresql-server-dev-${POSTGRES_VERSION}; \
-        ln -fs /usr/share/zoneinfo/Asia/Seoul /etc/localtime; \
-        dpkg-reconfigure -f noninteractive tzdata; \
-        apt-get autoremove; \
-        apt-get clean;
+    ln -fs /usr/share/zoneinfo/Asia/Seoul /etc/localtime; \
+    dpkg-reconfigure -f noninteractive tzdata; \
+    apt-get autoremove; \
+    apt-get clean;
 
-# RUN apt-get install -y postgresql-server-dev-$POSTGRES_VERSION
 
 ENV TZ=Asia/Seoul \
     LC_ALL=C.UTF-8 \
     SRC_PATH=/usr/local/src
 
-RUN echo "<1/2> Mecab Install..."; \
+RUN echo "Installing mecab-ko..."; \
     MECAB_DIST="mecab-0.996-ko-0.9.2"; \
     cd "$SRC_PATH"; \
     curl -s -LO https://bitbucket.org/eunjeon/mecab-ko/downloads/"$MECAB_DIST".tar.gz; \
@@ -50,7 +49,7 @@ RUN echo "<1/2> Mecab Install..."; \
     ./configure; \
     make all; \
     make install; \
-    echo "<1/2> Done."
+    echo "mecab-ko install done"
 
 # https://velog.io/@csu5216/nlp-docker로-mecab-ko-dic-설치시-에러
 RUN echo "/usr/local/lib" >> /etc/ld.so.conf \
@@ -58,7 +57,7 @@ RUN echo "/usr/local/lib" >> /etc/ld.so.conf \
 
 RUN set -eux; \
     \
-    echo "<2/2> Mecab DIC Install..."; \
+    echo "Installing mecab-ko-dic"; \
     MD_DIST="mecab-ko-dic-2.1.1-20180720"; \
     cd "$SRC_PATH"; \
     curl -s -LO https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/"$MD_DIST".tar.gz; \
@@ -69,9 +68,10 @@ RUN set -eux; \
     echo "include ld.so.conf.d/*.conf" >> /etc/ld.so.conf; \
     echo "$LD_LIBRARY_PATH" >> /etc/ld.so.conf; \
     /sbin/ldconfig; \
-    echo "<2/2> Done."
+    echo "mecab-ko-dic install done"
 
-RUN cd  "$SRC_PATH"; \
+RUN echo "Building textsearch_ko extension"; \
+    cd  "$SRC_PATH"; \
     git clone https://github.com/i0seph/textsearch_ko.git; \
     cd textsearch_ko; \
     make USE_PGXS=1; \
