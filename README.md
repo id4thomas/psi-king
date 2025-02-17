@@ -40,6 +40,13 @@ Document Ingestion Flow example:
 Pipeline Overview:
 ![3_3_overview](docs/figs/examples/3_3_overview.png)
 
+## Experiments
+### Korean sparse search with vectordb
+* pgvector [docs](./docs/vectordb/pgvector/korean_text_search_with_pg.md) [experiments](./experiments/2502_4_korean_sparse_indexing/1_pgvector/)
+    * use mecab-ko + `textsearch_ko` to enable korean `tsvector` calculation
+* qdrant [docs](./docs/vectordb/qdrant/building_with_cjk_lang_support.md) [experiments](./experiments/2502_4_korean_sparse_indexing/2_qdrant/)
+    * build qdrant with cjk language support for korean tokenization
+
 ## Acknowledgements
 * A lot of the structure of this project was inspired by llama-index
     * https://github.com/run-llama/llama_index
