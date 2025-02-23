@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     
     model_weight_dir: str
     
+    docling_model_weight_dir: str
+    
     openai_embedding_base_url: str
     openai_embedding_api_key: str
     openai_embedding_model: str

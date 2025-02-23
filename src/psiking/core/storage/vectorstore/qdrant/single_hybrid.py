@@ -303,14 +303,12 @@ class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
             points = self._dense_query(
                 dense_embedding=dense_embedding,
                 limit=limit,
-                dense_limit=dense_limit,
             )
         elif mode=="sparse":
             points = self._sparse_query(
                 sparse_embedding_values=sparse_embedding_values,
                 sparse_embedding_indices=sparse_embedding_indices,
                 limit=limit,
-                dense_limit=dense_limit,
             )
             
         else:

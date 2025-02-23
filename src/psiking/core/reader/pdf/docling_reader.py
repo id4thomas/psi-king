@@ -22,7 +22,7 @@ from core.reader.image_utils import crop_image
 
 if TYPE_CHECKING:
     from docling.datamodel.pipeline_options import PdfPipelineOptions
-    from docling.document_converter import ConversionResult
+    from docling.document_converter import DocumentConverter, ConversionResult
     from docling_core.types.doc import (
         ImageRefMode,
         TextItem,
@@ -63,16 +63,29 @@ class DoclingPDFReader(BaseReader):
     def __init__(
         self,
         *args,
+        converter: Optional["DocumentConverter"] = None,
         format_options: Optional[Union[dict, "PdfPipelineOptions"]] = None,
         **kwargs,
     ):
-        self.converter_ = self._load_converter(format_options)
+        try:
+            from docling.datamodel.base_models import InputFormat
+        except ImportError:
+            raise ImportError("Please install docling: 'pip install docling'")
+
+        if converter is not None:
+            self.converter_=converter
+        else:
+            self.converter_ = self._load_converter(format_options)
+        
+        # Initialize pipeline
+        self.converter_.initialize_pipeline(InputFormat.PDF)
         super().__init__(*args, **kwargs)
     
     def _load_converter(
         self,
         format_options: Optional[Union[dict, "PdfPipelineOptions"]] = None
     ):
+        """Initialize DocumentConverter with format_options"""
         try:
             from docling.datamodel.base_models import InputFormat
             from docling.document_converter import DocumentConverter, PdfFormatOption
@@ -91,6 +104,7 @@ class DoclingPDFReader(BaseReader):
             
             format_options.do_ocr = False
             format_options.do_table_structure = False
+            format_options.do_picture_description = False
         else:
             if isinstance(format_options, dict):
                 format_options = PdfPipelineOptions(**format_options)
@@ -109,7 +123,7 @@ class DoclingPDFReader(BaseReader):
         return converter
     
     def _convert(self, file_path: str | Path) -> "ConversionResult":
-        return self.converter_.convert(file_path)
+        return self.converter_.convert(file_path, raises_on_error=True)
     
     @classmethod
     def _get_textitem_by_cref(cls, cref: str, document: "DoclingDocument") -> "TextItem":
