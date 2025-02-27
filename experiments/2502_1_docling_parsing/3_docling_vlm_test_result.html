@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png"
+    href="https://ds4sd.github.io/docling/assets/logo.png"/>
+    <meta charset="UTF-8">
+    <title>
+    Powered by Docling
+    </title>
+    <style>
+    html {
+    background-color: LightGray;
+    }
+    body {
+    margin: 0 auto;
+    width:800px;
+    padding: 30px;
+    background-color: White;
+    font-family: Arial, sans-serif;
+    box-shadow: 10px 10px 10px grey;
+    }
+    figure{
+    display: block;
+    width: 100%;
+    margin: 0px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    }
+    img {
+    display: block;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    max-width: 640px;
+    max-height: 640px;
+    }
+    table {
+    min-width:500px;
+    background-color: White;
+    border-collapse: collapse;
+    cell-padding: 5px;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    }
+    th, td {
+    border: 1px solid black;
+    padding: 8px;
+    }
+    th {
+    font-weight: bold;
+    }
+    table tr:nth-child(even) td{
+    background-color: LightGray;
+    }
+    math annotation {
+    display: none;
+    }
+    .formula-not-decoded {
+    background: repeating-linear-gradient(
+    45deg, /* Angle of the stripes */
+    LightGray, /* First color */
+    LightGray 10px, /* Length of the first color */
+    White 10px, /* Second color */
+    White 20px /* Length of the second color */
+    );
+    margin: 0;
+    text-align: center;
+    }
+    </style>
+    </head>
+<table><tbody><tr><td></td><td>0</td><td>1</td><td>2</td><td>3</td></tr><tr><td>0</td><td>Ashish Vaswani*</td><td>Noam Shazeer*</td><td>Niki Parmar*</td><td>Jakob Uszkoreit*</td></tr><tr><td>1</td><td>Google Brain</td><td>Google Brain</td><td>Google Research</td><td>Google Research</td></tr><tr><td>2</td><td>awvansing@google.com</td><td>tooming@google.com</td><td>nikip@google.com</td><td>nikip@google.com</td></tr><tr><td>3</td><td>Ilion Jones*</td><td>Aidan N. Gomez*</td><td>Lukasz Kaiser*</td><td>Lukasz Kaiser*</td></tr><tr><td>4</td><td>Google Research</td><td>University of Toronto</td><td>Google Brain</td><td>Google Brain</td></tr><tr><td>5</td><td>11ion@google.com</td><td>aidan@cs.toronto.edu</td><td>lukaszkaiser@google.com</td><td>lukaszkaiser@google.com</td></tr><tr><td>6</td><td>Illia Polosukhin*</td><td>Illia Polosukhin*</td><td>Illia Polosukhin*</td><td>Illia Polosukhin*</td></tr></tbody></table>
+<table><tbody><tr><td></td><td>0</td></tr><tr><td>0</td><td>1 Introduction</td></tr><tr><td>1</td><td>Recurrent neural networks, long short-term memory [13] and gated recurrent [7] neural networks in particular, have been firmly established as state of the art approaches in sequence modeling and transduction problems such as language modeling and machine translation [25, 21, 5].</td></tr><tr><td>2</td><td>Numerous efforts have since continued to push the boundaries of recurrent language models and encoder-decoder architectures [3, 12, 24, 15].</td></tr><tr><td>3</td><td>Recurrent models typically factor computation along the symbol positions of the input and output sequences. Aligning the positions to steps in computation time, they generate a sequence of hidden states h t, as a function of the previous hidden state h t -1 and the input for position t.</td></tr><tr><td>4</td><td>This inherently sequential nature precludes parallelization within training examples, which become critical as longer sequence lengths, as memory constraints limit batching across examples.</td></tr><tr><td>5</td><td>Recent works have achieved significant improvements to computational efficiency through factorization tricks [22] and computational computation [31] while also improving model performance in case of the latter. The fundamental constraint of sequential computation, however, remains.</td></tr><tr><td>6</td><td>Attention mechanisms have become an integral part of compelling sequence modeling and transduction models in various tasks, allowing modeling of dependencies without regard to their distance in the input or output sequences [21, 19]. In all but a few cases, however, such attention mechanisms are used in conjunction with a recurrent network.</td></tr><tr><td>7</td><td>In this work we propose the Transformer, a model architecture eschewing recurrent and instead relying entirely on an attention mechanism to draw global dependencies between input and output. The Transformer allows for significantly more parallelization and can reach a new state of the art in translation quality after being trained for as little as twelve hours on eight P100 GPUs.</td></tr></tbody></table>
+<table><tbody><tr><td></td><td>0</td></tr><tr><td>0</td><td>Encoder: The encoder is composed of a stack of N = 6 identical layers.</td></tr><tr><td>1</td><td>Each layer has two sub-layers. The first is a multi-head self-attention</td></tr><tr><td>2</td><td>mechanism, and the second is a simple, position-wise fully connected network.</td></tr></tbody></table>
+</html>
