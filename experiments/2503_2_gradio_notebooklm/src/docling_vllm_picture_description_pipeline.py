@@ -82,12 +82,12 @@ class VLLMPictureDescriptionApiModel(PictureDescriptionApiModel):
 class VLLMPictureDescriptionPdfPipeline(StandardPdfPipeline):
     # https://github.com/DS4SD/docling/blob/d8a81c31686449a0bd3a56c0bc8475fead658ba9/docling/pipeline/standard_pdf_pipeline.py#L53
     def get_picture_description_model(
-        self, artifacts_path: Optional[Path] = None
+        self, artifacts_path: Optional[Path] = None, accelerator_options=None
     ):
         return VLLMPictureDescriptionApiModel(
             enabled=self.pipeline_options.do_picture_description,
             enable_remote_services=self.pipeline_options.enable_remote_services,
-            artifacts_path=None,
+            artifacts_path=artifacts_path,
             options=self.pipeline_options.picture_description_options,
-            accelerator_options=None
+            accelerator_options=accelerator_options
         )

@@ -11,36 +11,18 @@ from pydantic import BaseModel, Field
 from psiking.core.base.schema import doc_to_json
 
 from config import experiment_settings, app_settings
+
 from src.document_ingestion import DocumentIngestionPipeline
+from src.models import PipelineSettings, InputFile
 
 os.environ["DOCLING_ARTIFACTS_PATH"] = os.path.join(
     experiment_settings.docling_model_weight_dir, "docling-models"
 )
 
-class PipelineSettings(BaseModel):
-    # PictureDescription
-    vlm_base_url: str = Field("")
-    vlm_api_key: str = Field("")
-    vlm_model: str = Field("")
-    
-    # PDF2Img
-    poppler_path: str = Field("/opt/homebrew/Cellar/poppler/25.01.0/bin")
-    
-    # Chunking
-    text_chunk_size: int = Field(1024)
-    text_chunk_overlap: int = Field(128)
-    
-    output_dir: str = Field("")
-
-class InputFile(BaseModel):
-    uid: str
-    file_path: str
-    # metadata: Dict[str, str] = Field(dict())
 
 def ingest(
     pipeline_settings: dict,
-    input_files: List[dict],
-    metadata_dicts: Dict[str, dict]
+    input_files: List[dict]
 ):
     pipeline_settings = PipelineSettings(**pipeline_settings)
     input_files = [InputFile(**x) for x in input_files]
@@ -51,9 +33,8 @@ def ingest(
     
     start = time.time()
     documents = pipeline.run(
-        [x.file_path for x in input_files],
-        source_id_prefix="kr-fsc_policy-pdf",
-        extra_infos=metadata_dicts
+        input_files,
+        source_id_prefix="kr-fsc_policy-pdf"
     )
     print("Pipeline Finished in {:.3f}".format(time.time()-start))
     
@@ -122,7 +103,8 @@ def main():
     for fname in fnames:
         input_file = InputFile(
             uid=str(uuid.uuid4()),
-            file_path=str(os.path.join(file_dir, fname))
+            file_path=str(os.path.join(file_dir, fname)),
+            metadata=metadata_dicts[fname]
         )
         input_files.append(input_file.model_dump())
     with open(f"storage/request-{timestamp}.json", "w") as f:
@@ -152,8 +134,7 @@ def main():
             future = excutor.submit(
                 ingest,
                 pipeline_settings.model_dump(),
-                batch,
-                metadata_dicts
+                batch
             )
             future_list.append(future)
             

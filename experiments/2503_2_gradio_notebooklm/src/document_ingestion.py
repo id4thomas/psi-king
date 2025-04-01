@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from psiking.core.reader.pdf.docling_reader import DoclingPDFReader
 
+from .models import InputFile
 from .reader import ReaderModule
 from .transformer import TransformerModule
 
@@ -18,11 +19,10 @@ class DocumentIngestionPipeline:
     def _load_transformer(self):
         return TransformerModule(self.settings)
     
-    def run(self, file_paths: List[str], source_id_prefix="", extra_infos: Dict[str,str]={}):
+    def run(self, input_files: List[InputFile], source_id_prefix=""):
         documents = self.reader.run(
-            file_paths,
-            source_id_prefix=source_id_prefix,
-            extra_infos=extra_infos
+            input_files,
+            source_id_prefix=source_id_prefix
         )
         
         documents = self.transformer.run(documents)

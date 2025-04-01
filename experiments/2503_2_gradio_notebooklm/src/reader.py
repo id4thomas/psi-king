@@ -19,6 +19,7 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 from psiking.core.reader.pdf.docling_reader import DoclingPDFReader
 from psiking.core.reader import PDF2ImageReader
 
+from .models import InputFile
 from .docling_vllm_picture_description_pipeline import (
     VLLMPictureDescriptionApiOptions,
     VLLMPictureDescriptionPdfPipeline
@@ -119,16 +120,19 @@ class ReaderModule:
         pdf2img_reader = PDF2ImageReader(poppler_path=self.settings.poppler_path)
         return pdf2img_reader
 
-    def run(self, file_paths: List[str], source_id_prefix="", extra_infos: Dict[str,str]={}):
+    def run(
+        self,
+        input_files: List[InputFile], 
+        source_id_prefix="",
+    ):
         documents = []
         docling_failed_fnames = []
         pdf2img_failed_fnames = []
-        for doc_i, file_path in tqdm(enumerate(file_paths)):
+        for doc_i, input_file in tqdm(enumerate(input_files)):
+            file_path=input_file.file_path
             fname = file_path.rsplit("/",1)[-1]
             
-            doc_extra_info = copy.deepcopy(
-                extra_infos.get(fname, dict())
-            )
+            doc_extra_info = copy.deepcopy(input_file.metadata)
             doc_extra_info["source_id"] = f"{source_id_prefix}/{doc_i}"
             doc_extra_info["source_file"] = fname
             
