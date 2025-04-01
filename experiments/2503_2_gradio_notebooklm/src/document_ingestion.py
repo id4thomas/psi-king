@@ -1,9 +1,6 @@
 from typing import Dict, List
 
-import sys
-sys.path.append("/Users/id4thomas/github/psi-king/src/psiking")
-
-from core.reader.pdf.docling_reader import DoclingPDFReader
+from psiking.core.reader.pdf.docling_reader import DoclingPDFReader
 
 from .reader import ReaderModule
 from .transformer import TransformerModule

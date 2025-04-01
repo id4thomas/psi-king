@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseSettings):
+class ExperimentSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file="../.env", env_file_encoding="utf-8", extra="ignore"
     )
@@ -19,5 +19,12 @@ class Settings(BaseSettings):
     openai_embedding_model: str
     
     qdrant_url: str
-    
-settings = Settings()
+
+class AppSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+    qdrant_port: int
+
+experiment_settings = ExperimentSettings()
+app_settings = AppSettings()

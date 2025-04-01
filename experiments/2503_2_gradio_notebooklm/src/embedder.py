@@ -6,16 +6,14 @@ from fastembed import SparseTextEmbedding
 from visual_bge.modeling import Visualized_BGE
 from pydantic import BaseModel, Field
 
-
-sys.path.append("/Users/id4thomas/github/psi-king/src/psiking")
-from core.base.schema import TextNode, ImageNode, TableNode, Document
-from core.embedder.flagembedding import (
+from psiking.core.base.schema import TextNode, ImageNode, TableNode, Document
+from psiking.core.embedder.flagembedding import (
     VisualizedBGEInput, 
     LocalVisualizedBGEEmbedder
 )
-from core.embedder.fastembed.local_sparse import LocalFastEmbedSparseEmbedder
+from psiking.core.embedder.fastembed.local_sparse import LocalFastEmbedSparseEmbedder
 
-from core.formatter.document.simple import SimpleTextOnlyFormatter
+from psiking.core.formatter.document.simple import SimpleTextOnlyFormatter
 
 class SparseEmbeddingOutput(BaseModel):
     values: List[List[float]]

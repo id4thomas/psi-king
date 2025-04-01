@@ -1,7 +1,8 @@
 import copy
+from pathlib import Path
 from typing import Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from tqdm import tqdm
 
 from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
@@ -15,11 +16,8 @@ from docling.datamodel.pipeline_options import (
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
 
-import sys
-sys.path.append("/Users/id4thomas/github/psi-king/src/psiking")
-
-from core.reader.pdf.docling_reader import DoclingPDFReader
-from core.reader import PDF2ImageReader
+from psiking.core.reader.pdf.docling_reader import DoclingPDFReader
+from psiking.core.reader import PDF2ImageReader
 
 from .docling_vllm_picture_description_pipeline import (
     VLLMPictureDescriptionApiOptions,
@@ -34,6 +32,9 @@ DESCRIPTION_INSTRUCTION = '''주어진 이미지에대해 2가지 정보를 반�
 class ImageDescription(BaseModel):
     description: str
     text: str
+    
+    class Config:
+        extra=Extra.forbid
 
 
 class ReaderModule:
@@ -50,16 +51,33 @@ class ReaderModule:
         format_options.generate_page_images = True
         format_options.generate_picture_images = True
         format_options.do_ocr = False
+        
+        # Image Description
+        image_description_output_schema = ImageDescription.model_json_schema()
+        image_description_output_schema["name"]="description"
         image_description_options = VLLMPictureDescriptionApiOptions(
             url=f"{self.settings.vlm_base_url}/v1/chat/completions",
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.settings.vlm_api_key}"  
+            },
             params=dict(
                 model=self.settings.vlm_model,
                 seed=42,
                 max_completion_tokens=512,
                 temperature=0.9,
-                extra_body={"guided_json": ImageDescription.model_json_schema()}
+                # For OpenAI
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "description",
+                        "strict": True,
+                        "schema": ImageDescription.model_json_schema()
+                    }
+                }
+                # For VLLM Structured Gen
+                # extra_body={"guided_json": ImageDescription.model_json_schema()}
             ),
-            # prompt="이미지에 대해 최대 2문장 정도로 설명하고 있는 텍스트를 모두 추출하세요. 이미지에 정보가 없다면 설명 텍스트를 작성하지 않습니다. 인식 텍스트와 설명만 반환하세요.",
             prompt=DESCRIPTION_INSTRUCTION,
             batch_size=6, # Not implemented inside
             scale=0.9,
@@ -106,8 +124,6 @@ class ReaderModule:
         docling_failed_fnames = []
         pdf2img_failed_fnames = []
         for doc_i, file_path in tqdm(enumerate(file_paths)):
-            
-            # print(file_path)
             fname = file_path.rsplit("/",1)[-1]
             
             doc_extra_info = copy.deepcopy(

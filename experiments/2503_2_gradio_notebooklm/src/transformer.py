@@ -1,9 +1,6 @@
-import sys
-sys.path.append("/Users/id4thomas/github/psi-king/src/psiking")
-
-from core.base.schema import TextNode, Document
-from core.processor.document.text_merger import TextNodeMerger
-from core.splitter.text.langchain_text_splitters import LangchainRecursiveCharacterTextSplitter
+from psiking.core.base.schema import TextNode, Document
+from psiking.core.processor.document.text_merger import TextNodeMerger
+from psiking.core.splitter.text.langchain_text_splitters import LangchainRecursiveCharacterTextSplitter
 
 
 class TransformerModule:

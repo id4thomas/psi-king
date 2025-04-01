@@ -87,5 +87,7 @@ class VLLMPictureDescriptionPdfPipeline(StandardPdfPipeline):
         return VLLMPictureDescriptionApiModel(
             enabled=self.pipeline_options.do_picture_description,
             enable_remote_services=self.pipeline_options.enable_remote_services,
+            artifacts_path=None,
             options=self.pipeline_options.picture_description_options,
+            accelerator_options=None
         )
