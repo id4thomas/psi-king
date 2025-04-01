@@ -446,7 +446,7 @@ class TableNode(BaseNode):
             else:
                 raise ValueError("Invalid 'text_resource' format, should be a string or a MediaResource")
         if "caption_resource" in values:
-            cr = values.pop("caption")
+            cr = values.pop("caption_resource")
             if isinstance(cr, MediaResource):
                 values["caption_resource"] = cr
             elif isinstance(cr, str):
@@ -552,7 +552,7 @@ class Document(BaseNode):
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Document":
         ## Load nodes from data
-        node_classes = {"TextNode": TextNode, "ImageNode": ImageNode}
+        node_classes = {"TextNode": TextNode, "ImageNode": ImageNode, "TableNode": TableNode}
         for i, node_data in enumerate(data.get("nodes", [])):
             node_type = node_data.get("class_name")
             if node_type and node_type in node_classes:
@@ -580,6 +580,8 @@ def json_to_doc(doc_dict: dict) -> BaseNode:
         doc = TextNode.from_dict(data_dict)
     elif doc_type == ImageNode.get_type():
         doc = ImageNode.from_dict(data_dict)
+    elif doc_type == TableNode.get_type():
+        doc = TableNode.from_dict(data_dict)
     else:
         raise ValueError(f"Unknown doc type: {doc_type}")
 
