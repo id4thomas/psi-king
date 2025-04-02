@@ -19,11 +19,7 @@ class DocumentIngestionPipeline:
     def _load_transformer(self):
         return TransformerModule(self.settings)
     
-    def run(self, input_files: List[InputFile], source_id_prefix=""):
-        documents = self.reader.run(
-            input_files,
-            source_id_prefix=source_id_prefix
-        )
-        
+    def run(self, input_files: List[InputFile]):
+        documents = self.reader.run(input_files)
         documents = self.transformer.run(documents)
         return documents

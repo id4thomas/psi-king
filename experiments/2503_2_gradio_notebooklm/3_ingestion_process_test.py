@@ -19,9 +19,9 @@ os.environ["DOCLING_ARTIFACTS_PATH"] = os.path.join(
     experiment_settings.docling_model_weight_dir, "docling-models"
 )
 
-
 def ingest(
     pipeline_settings: dict,
+    collection_key: str,
     input_files: List[dict]
 ):
     pipeline_settings = PipelineSettings(**pipeline_settings)
@@ -32,17 +32,15 @@ def ingest(
     print("Pipeline Loaded in {:.3f}".format(time.time()-start))
     
     start = time.time()
-    documents = pipeline.run(
-        input_files,
-        source_id_prefix="kr-fsc_policy-pdf"
-    )
+    documents = pipeline.run(input_files)
     print("Pipeline Finished in {:.3f}".format(time.time()-start))
     
     ## Save
+    output_dir = os.path.join("storage", collection_key)
     for input_file in input_files:
         fname = input_file.file_path.rsplit("/",1)[-1]
         chunks = list(filter(lambda x: x.metadata['source_file']==fname, documents))
-        with open(os.path.join(pipeline_settings.output_dir, f"{input_file.uid}.json"), "w") as f:
+        with open(os.path.join(output_dir, f"{input_file.uid}.json"), "w") as f:
             f.write(json.dumps(
                 {
                     "file_path": input_file.file_path,
@@ -57,31 +55,22 @@ def ingest(
     # for input_file, document in zip(input_files, documents):
     #     with open(os.path.join(pipeline_settings.output_dir, f"{input_file.uid}.json"), "w") as f:
     #         f.write(json.dumps(doc_to_json(document), ensure_ascii=False, indent=4))
-    
-def main():
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-    collection_key = str(uuid.uuid4())
-    print(f"Collection: {collection_key}")
-    
-    # Initialize output_dir
-    output_dir = os.path.join("storage", collection_key)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    # Initialize Settings
-    max_workers = 4
-    pipeline_settings = PipelineSettings(
-        vlm_base_url = experiment_settings.vlm_base_url,
-        vlm_api_key=experiment_settings.vlm_api_key,
-        vlm_model = experiment_settings.vlm_model,
-        poppler_path="/opt/homebrew/Cellar/poppler/25.01.0/bin",
-        text_chunk_size=1024,
-        text_chunk_overlap=128,
-        output_dir=output_dir
-    )
-    
-    # Load Files
-    ## get fnames
+def initialize_collection(collection_key):
+    collection_dir = os.path.join("storage", collection_key)
+    if not os.path.exists(collection_dir):
+        os.makedirs(collection_dir)
+        
+    document_dir = os.path.join(collection_dir, "documents")
+    if not os.path.exists(document_dir):
+        os.makedirs(document_dir)
+        
+    metadata_dir = os.path.join(collection_dir, "metadata")
+    if not os.path.exists(metadata_dir):
+        os.makedirs(metadata_dir)
+
+def prepare_input_files():
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
     file_dir = os.path.join(
         experiment_settings.data_dir, "retrieval_dataset/2503-01-korean-finance/kr-fsc_policy"
     )
@@ -118,9 +107,31 @@ def main():
                 ensure_ascii=False
             ),
         )
-        
-    print("STARTING INGESTION {}".format(len(input_files)))
 
+def main():
+    collection_key = str(uuid.uuid4())
+    print(f"Collection: {collection_key}")
+    
+    # Initialize output_dir
+    initialize_collection(collection_key)
+    
+    # Initialize Settings
+    max_workers = 4
+    pipeline_settings = PipelineSettings(
+        vlm_base_url = experiment_settings.vlm_base_url,
+        vlm_api_key=experiment_settings.vlm_api_key,
+        vlm_model = experiment_settings.vlm_model,
+        poppler_path="/opt/homebrew/Cellar/poppler/25.01.0/bin",
+        text_chunk_size=1024,
+        text_chunk_overlap=128,
+    )
+    
+    # Load Files
+    input_files = prepare_input_files()
+    
+
+    # Start Ingestion
+    print("STARTING INGESTION {}".format(len(input_files)))
     start_tm = time.time()  # 시작 시간
     # ProcessPoolExecutor
     num_workers = min(max_workers, len(input_files))
@@ -134,6 +145,7 @@ def main():
             future = excutor.submit(
                 ingest,
                 pipeline_settings.model_dump(),
+                collection_key,
                 batch
             )
             future_list.append(future)

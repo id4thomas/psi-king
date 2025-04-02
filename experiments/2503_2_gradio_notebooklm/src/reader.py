@@ -120,11 +120,7 @@ class ReaderModule:
         pdf2img_reader = PDF2ImageReader(poppler_path=self.settings.poppler_path)
         return pdf2img_reader
 
-    def run(
-        self,
-        input_files: List[InputFile], 
-        source_id_prefix="",
-    ):
+    def run(self, input_files: List[InputFile]):
         documents = []
         docling_failed_fnames = []
         pdf2img_failed_fnames = []
@@ -133,7 +129,7 @@ class ReaderModule:
             fname = file_path.rsplit("/",1)[-1]
             
             doc_extra_info = copy.deepcopy(input_file.metadata)
-            doc_extra_info["source_id"] = f"{source_id_prefix}/{doc_i}"
+            doc_extra_info["source_id"] = input_file.uid
             doc_extra_info["source_file"] = fname
             
             try:

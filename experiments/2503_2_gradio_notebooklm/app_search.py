@@ -1,18 +1,18 @@
-
-import concurrent.futures as futures
 import base64
+import concurrent.futures as futures
 from datetime import datetime
 from io import BytesIO
 import json
 import os
-from PIL import Image
 import time
 from typing import Dict, List
+from tqdm import tqdm
 import traceback
 import uuid
 
 import gradio as gr
 import pandas as pd
+from PIL import Image
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
@@ -50,13 +50,71 @@ EMBEDDING_SETTINGS = EmbeddingSettings(
 embedder = EmbedderModule(EMBEDDING_SETTINGS)
 qdrant_client = QdrantClient(host="localhost", port=app_settings.qdrant_port)
 
-# Document Ingestion
-## Ingestion
+# Initialization
+def initialize_collection(collection_key):
+    collection_dir = os.path.join("storage/collections", collection_key)
+    if not os.path.exists(collection_dir):
+        os.makedirs(collection_dir)
+        
+    document_dir = os.path.join(collection_dir, "documents")
+    if not os.path.exists(document_dir):
+        os.makedirs(document_dir)
+        
+    metadata_dir = os.path.join(collection_dir, "metadata")
+    if not os.path.exists(metadata_dir):
+        os.makedirs(metadata_dir)
+
+def prepare_input_files(collection_key):
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+    file_dir = os.path.join(
+        experiment_settings.data_dir, "retrieval_dataset/2503-01-korean-finance/kr-fsc_policy"
+    )
+    fnames = [x for x in os.listdir(file_dir) if "pdf" in x][:2]
+    ## get metadata
+    metadata_file_path =  os.path.join(
+        experiment_settings.data_dir, "retrieval_dataset/2503-01-korean-finance/kr-fsc_pdf_file_metadata.json"
+    )
+    with open(metadata_file_path, "r") as f:
+        metadata_file_contents = json.load(f)
+    metadata_dicts = {
+        "{}_{}.pdf".format(x["item_id"], x["no"]): {
+            "title": x["item_title"]
+        }
+        for x in metadata_file_contents
+    }
+    ## prepare input files
+    input_files = []
+    for fname in fnames:
+        input_file = InputFile(
+            uid=str(uuid.uuid4()),
+            file_path=str(os.path.join(file_dir, fname)),
+            metadata=metadata_dicts[fname]
+        )
+        input_files.append(input_file)
+
+    with open(f"storage/request-{timestamp}.json", "w") as f:
+        f.write(
+            json.dumps(
+                {
+                    "collection_key": collection_key,
+                    "timestamp": timestamp,
+                    "input_file_ids": [x.uid for x in input_files]
+                },
+                indent=4,
+                ensure_ascii=False
+            ),
+        )
+    return input_files
+
+############# INDEX
+## 1. Ingestion
 def ingest_fn(
     pipeline_settings: dict,
+    collection_key: str,
     input_files: List[dict]
 ):
     pipeline_settings = PipelineSettings(**pipeline_settings)
+    collection_dir = os.path.join("storage/collections", collection_key)
     input_files = [InputFile(**x) for x in input_files]
     
     start = time.time()
@@ -64,41 +122,32 @@ def ingest_fn(
     print("Pipeline Loaded in {:.3f}".format(time.time()-start))
     
     start = time.time()
-    documents = pipeline.run(
-        input_files,
-        source_id_prefix="kr-fsc_policy-pdf"
-    )
+    documents = pipeline.run(input_files)
     print("Pipeline Finished in {:.3f}".format(time.time()-start))
     
     ## Save
     for input_file in input_files:
         fname = input_file.file_path.rsplit("/",1)[-1]
         chunks = list(filter(lambda x: x.metadata['source_file']==fname, documents))
-        with open(os.path.join(pipeline_settings.output_dir, f"{input_file.uid}.json"), "w") as f:
-            f.write(json.dumps(
-                {
-                    "file_path": input_file.file_path,
-                    "chunks": [
-                        doc_to_json(x) for x in chunks
-                    ]
-                },
-                ensure_ascii=False,
-                indent=4
-        ))
-            
-def ingest(collection_key, file_paths, max_workers=4):
-    output_dir = os.path.join("storage", collection_key)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    PIPELINE_SETTINGS.output_dir=output_dir
-    
-    input_files = []
-    for file_path in file_paths:
-        input_file = InputFile(
-            file_path=file_path
-        )
-        input_files.append(input_file)
         
+        # Save Documents
+        chunk_ids = []
+        for chunk in chunks:
+            chunk_id = chunk.id_
+            chunk_ids.append(chunk_id)
+            with open(os.path.join(collection_dir, f"documents/{chunk_id}.json"), "w") as f:
+                f.write(json.dumps(doc_to_json(chunk), indent=4, ensure_ascii=False))
+        
+        # Save Metadata
+        input_file_metadata = {
+            "uid": input_file.uid,
+            "file_path": input_file.file_path,
+            "chunk_ids": chunk_ids
+        }
+        with open(os.path.join(collection_dir, f"metadata/{input_file.uid}.json"), "w") as f:
+            f.write(json.dumps(input_file_metadata, indent=4, ensure_ascii=False))
+            
+def ingest(collection_key, input_files, max_workers=4):
     start_tm = time.time()  # 시작 시간
     # ProcessPoolExecutor
     num_workers = min(max_workers, len(input_files))
@@ -112,6 +161,7 @@ def ingest(collection_key, file_paths, max_workers=4):
             future = excutor.submit(
                 ingest_fn,
                 PIPELINE_SETTINGS.model_dump(),
+                collection_key,
                 batch
             )
             future_list.append(future)
@@ -130,20 +180,9 @@ def ingest(collection_key, file_paths, max_workers=4):
     return input_files
         
 ## Embed
-def embed(collection_key, input_files):
-    chunks = []
-    for input_file in input_files:
-        with open(f"storage/{collection_key}/{input_file.uid}.json", "r") as f:
-            document_data = json.load(f)
-        document_chunks = [
-            json_to_doc(x) for x in document_data["chunks"]
-        ]
-        chunks.extend(document_chunks)
-    
-    embeddings = embedder.run(chunks)
-    
-    # Insert
-    
+def embed(collection_key, input_files, batch_size = 32):
+    # Initialize Collection
+    collection_dir = os.path.join("storage/collections", collection_key)
     vector_store = QdrantSingleHybridVectorStore(
         collection_name=collection_key,
         client=qdrant_client
@@ -170,21 +209,43 @@ def embed(collection_key, input_files):
         sparse_vector_config=sparse_vectors_config,
         on_disk_payload=True,
     )
-    vector_store.add(
-        documents=chunks,
-        texts=embeddings.texts,
-        dense_embeddings=embeddings.dense.values,
-        sparse_embedding_values=embeddings.sparse.values,
-        sparse_embedding_indices=embeddings.sparse.indices,
-        metadata_keys=["source_file", "title"]
-    )
+    
+    # Get Chunk Ids
+    chunk_ids = []
+    for input_file in input_files:
+        with open(os.path.join(collection_dir, f"metadata/{input_file.uid}.json"), "r") as f:
+            input_file_metadata = json.load(f)
+            input_file_chunk_ids = input_file_metadata["chunk_ids"]
+        chunk_ids.extend(input_file_chunk_ids)
 
-def process(collection_key, files):
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+    # Batched Embedding
+    for i in tqdm(range(0, len(chunk_ids), batch_size)):
+        batch_chunk_ids = chunk_ids[i:i+batch_size]
+        batch = []
+        for chunk_id in batch_chunk_ids:
+            with open(os.path.join(collection_dir, f"documents/{chunk_id}.json"), "r") as f:
+                chunk = json_to_doc(json.load(f))
+            batch.append(chunk)
+        
+        embeddings = embedder.run(batch)
+        vector_store.add(
+            documents=batch,
+            texts=embeddings.texts,
+            dense_embeddings=embeddings.dense.values,
+            sparse_embedding_values=embeddings.sparse.values,
+            sparse_embedding_indices=embeddings.sparse.indices,
+            metadata_keys=["source_id", "source_file"]
+        )
+
+def index(collection_key, files):
+    # 1. Initialize
+    initialize_collection(collection_key)
+    input_files = prepare_input_files(collection_key)
     
     start = time.time()
+    # 2. Ingest
     try:
-        input_files=ingest(collection_key, files)
+        ingest(collection_key, input_files)
         yield "Indexing {} files complete in {:.3f}.".format(
             len(files),
             time.time()-start
@@ -193,18 +254,7 @@ def process(collection_key, files):
         traceback.print_exc()
         yield f"Indexing failed: {str(e)}"
     
-    with open(f"storage/collections/{collection_key}.json", "w") as f:
-        f.write(
-            json.dumps(
-                {
-                    "timestamp": timestamp,
-                    "input_files": [x.model_dump() for x in input_files]
-                },
-                indent=4,
-                ensure_ascii=False
-            ),
-        )
-        
+    # 3. Embed
     try:
         embed(collection_key, input_files)
     except Exception as e:
@@ -216,6 +266,7 @@ def process(collection_key, files):
             time.time()-start
         )
 
+############# SEARCH
 def search(collection_key, query):
     vector_store = QdrantSingleHybridVectorStore(
         collection_name=collection_key,
@@ -283,11 +334,6 @@ def main():
                 )
 
             with gr.Column(scale=8):
-                # chatbot = gr.Chatbot(
-                #     label="Chatbot",
-                #     type="messages",
-                #     show_copy_button=True
-                # )
                 chat = gr.ChatInterface(
                     fn=echo,
                     type="messages",
@@ -295,7 +341,7 @@ def main():
                     title="Chat Bot"
                 )
         index_button.click(
-            process, 
+            index, 
             inputs=[collection_key, file_upload], 
             outputs=indexing_status
         )
