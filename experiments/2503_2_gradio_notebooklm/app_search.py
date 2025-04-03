@@ -267,7 +267,23 @@ def index(collection_key, files):
         )
 
 ############# SEARCH
-def search(collection_key, query):
+def get_document(collection_key, document_id):
+    with open(f"storage/collections/{collection_key}/documents/{document_id}.json", "r") as f:
+        document_data = json.load(f)
+    return json_to_doc(document_data)
+
+def image_to_base64(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+def resize_image(image, ratio=0.3):
+    width, height = image.size
+    new_size = (int(width * ratio), int(height * ratio))
+    image.thumbnail(new_size)
+    return image
+    
+def search(collection_key, query, mode="hybrid"):
     vector_store = QdrantSingleHybridVectorStore(
         collection_name=collection_key,
         client=qdrant_client
@@ -277,39 +293,59 @@ def search(collection_key, query):
         nodes=[TextNode(text=query)]
     )
     query_embedding_output = embedder.run([query_document])
-    results = vector_store.query(
-        mode="hybrid",
-        dense_embedding=query_embedding_output.dense.values[0],
-        sparse_embedding_values=query_embedding_output.sparse.values[0],
-        sparse_embedding_indices=query_embedding_output.sparse.indices[0],
-        limit=10
-    )
-    print(results)
-
-def load_image(file_path):
-    return Image.open(file_path)
-
-def echo(message, history):
-    print(history)
+    if mode=="hybrid":
+        results = vector_store.query(
+            mode="hybrid",
+            dense_embedding=query_embedding_output.dense.values[0],
+            sparse_embedding_values=query_embedding_output.sparse.values[0],
+            sparse_embedding_indices=query_embedding_output.sparse.indices[0],
+            limit=10
+        )
+    elif mode=="dense":
+        results = vector_store.query(
+            mode="hybrid",
+            dense_embedding=query_embedding_output.dense.values[0],
+            limit=10
+        )
+    else:
+        raise ValueError("search mode should be dense or hybrid")
     
-    img = load_image("./resources/test.jpeg")
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    img_base64 = base64.b64encode(buffer.getvalue()).decode()
-    md = f"""
-### Here is an image loaded with PIL and embedded in Markdown:
-<img src="data:image/png;base64,{img_base64}" width="300">
-"""
-    msg = gr.ChatMessage(
-        # content=gr.Image()
-        content = gr.Markdown(md)
-        # content=[
-        #     gr.Image("/file=resources/test.png"),
-        #     gr.Markdown("some response")
-        # ]
-    )
-    return msg
-    # return message
+    result = {
+        "score": [],
+        "source": [],
+        "id": [],
+        "text": [],
+        "image": []
+    }
+    for point in results.points:
+        point_id = point.id
+        document = get_document(collection_key, point_id)
+        node = document.nodes[0]
+        if isinstance(node, TextNode):
+            text = node.text[:100]
+            img = ""
+        elif isinstance(node, ImageNode):
+            text = node.caption[:100]
+            img = node.image
+            img = resize_image(img, ratio=0.5)
+            img_base64 = image_to_base64(img)
+            img = f"![img](data:image/png;base64,{img_base64})"
+        elif isinstance(node, TableNode):
+            text = node.text[:100]
+            img = node.image
+            img = resize_image(img, ratio=0.5)
+            img_base64 = image_to_base64(img)
+            img = f"![img](data:image/png;base64,{img_base64})"
+        else:
+            continue
+        
+        result["score"].append(point.score)
+        result["source"].append(document.metadata['source_file'])
+        result["id"].append(document.id_)
+        result["text"].append(text)
+        result["image"].append(img)
+    df = pd.DataFrame(result)
+    return df
 
 def main():
     with gr.Blocks(fill_height=True) as demo:
@@ -334,16 +370,31 @@ def main():
                 )
 
             with gr.Column(scale=8):
-                chat = gr.ChatInterface(
-                    fn=echo,
-                    type="messages",
-                    examples=["hello", "hola", "merhaba"],
-                    title="Chat Bot"
+                # chat = gr.ChatInterface(
+                #     fn=echo,
+                #     type="messages",
+                #     examples=["hello", "hola", "merhaba"],
+                #     title="Chat Bot"
+                # )
+                query_input = gr.Textbox(label="Query", lines=3)
+                result_df = gr.DataFrame(
+                    # datatype=["number", "text", "text", "text"],
+                    # column_widths=["5%", "7%", "8%", "60%"],
+                    datatype=["number", "text", "text", "text", "markdown"],
+                    column_widths=["8%", "10%", "7%", "45%", "30%"],
+                    wrap=True
                 )
+                search_button = gr.Button("Search")
+                
         index_button.click(
             index, 
             inputs=[collection_key, file_upload], 
             outputs=indexing_status
+        )
+        search_button.click(
+            search,
+            inputs=[collection_key, query_input],
+            outputs=result_df
         )
 
         demo.launch()
