@@ -34,7 +34,7 @@ class OpenAITextEmbedder(BaseEmbedder):
         try:
             from openai import OpenAI, AsyncOpenAI
         except ImportError:
-            raise ImportError("Please install qdrant-client: 'pip install qdrant-client'")
+            raise ImportError("Please install openai client: 'pip install openai'")
         
         if client is None and aclient is None:
             raise ValueError("Must provide either a OpenAI or AsyncOpenAI instance")
