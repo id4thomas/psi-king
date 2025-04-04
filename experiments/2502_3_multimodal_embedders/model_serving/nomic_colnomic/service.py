@@ -2,6 +2,7 @@ import asyncio
 import base64
 from enum import Enum
 from io import BytesIO
+import os
 import logging
 from typing import Annotated, List, Optional, cast
 
@@ -105,23 +106,34 @@ class ColNomicProcessor(ColQwen2_5_Processor):
 #     return model
 
 def create_model_pipeline(path: str) -> ColQwen2_5:
-    return cast(
-        ColQwen2_5,
-        ColQwen2_5.from_pretrained(
-            pretrained_model_name_or_path=path,
-            torch_dtype=torch.bfloat16,
-            device_map=get_torch_device("auto"),
-            local_files_only=True,
-            low_cpu_mem_usage=True,
-        ),
+    model = ColQwen2_5.from_pretrained(
+        os.path.join(path, "pretrained"),
+        torch_dtype=torch.bfloat16,
+        device_map="mps",
+        attn_implementation="eager",
+        local_files_only=True,
+        low_cpu_mem_usage=True,
     ).eval()
+    model.load_adapter(os.path.join(path, "adapter"))
+    return model
+
+    # return cast(
+    #     ColQwen2_5,
+    #     ColQwen2_5.from_pretrained(
+    #         pretrained_model_name_or_path=path,
+    #         torch_dtype=torch.bfloat16,
+    #         device_map=get_torch_device("auto"),
+    #         local_files_only=True,
+    #         low_cpu_mem_usage=True,
+    #     ),
+    # ).eval()
 
 
 def create_processor_pipeline(path: str) -> ColNomicProcessor:
     return cast(
         ColNomicProcessor,
         ColNomicProcessor.from_pretrained(
-            pretrained_model_name_or_path=path,
+            pretrained_model_name_or_path=os.path.join(path, "adapter"),
             local_files_only=True,
         ),
     )
@@ -150,6 +162,8 @@ class ColNomicService:
         #     pretrained_path=pretrained_path,
         #     adapter_path=adapter_path
         # )
+        print(self._model_ref.path)
+        print(os.listdir(self._model_ref.path))
         self.model: ColQwen2_5 = create_model_pipeline(path=self._model_ref.path)
         self.processor: ColNomicProcessor = create_processor_pipeline(path=self._model_ref.path)
         logger.info(f"ColNomic loaded on device: {self.model.device}")

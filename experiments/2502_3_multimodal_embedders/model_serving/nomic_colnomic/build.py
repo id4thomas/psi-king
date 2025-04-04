@@ -51,18 +51,16 @@ with bentoml.models.create(name="colnomic-embed-multimodal-3b") as model_ref:
         torch_dtype=torch.bfloat16,
         device_map="mps",
         attn_implementation="eager",
-        local_files_only=True,
-        low_cpu_mem_usage=True,
     ).eval()
+    model.save_pretrained(os.path.join(model_ref.path, "pretrained"))
 
     # Load the adapter
     model.load_adapter(adapter_path)
-    # model.merge_and_unload().save_pretrained(model_ref.path)
-    model.save_pretrained(model_ref.path)
+    model.save_pretrained(os.path.join(model_ref.path, "adapter"))
     print("Model successfully built.")
     
     processor = ColQwen2_5_Processor.from_pretrained(adapter_path)
-    processor.save_pretrained(model_ref.path)
+    processor.save_pretrained(os.path.join(model_ref.path, "adapter"))
     print("Preprocessor successfully built.")
     
 
