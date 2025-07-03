@@ -228,7 +228,7 @@ class DoclingPDFReader(BaseReader):
     @classmethod
     def _tableitem_to_node(cls, item: "TableItem", document: "DoclingDocument") -> TableNode:
         # text_resource
-        html_text = item.export_to_html()
+        html_text = item.export_to_html(doc=document)
         
         # image_resource
         table_img = item.get_image(document)

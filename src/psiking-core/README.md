@@ -10,3 +10,7 @@ Building wheel
   - Building wheel
   - Built psiking_core-0.0.1-py3-none-any.whl
 ```
+
+```
+pip install dist/psiking_core-0.0.1-py3-none-any.whl --force-reinstall
+```
