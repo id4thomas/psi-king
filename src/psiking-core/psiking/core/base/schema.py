@@ -223,7 +223,7 @@ class MediaResource(BaseModel):
         """Serialize the MediaResource, including binary data as base64."""
         data = self.dict()
         if self.data is not None:
-            data["data"] = base64.b64encode(self.data).decode("utf-8")
+            data["data"] = self.data.decode("utf-8")
         if "path" in data and data["path"] is not None:
             data["path"] = str(Path(data["path"]))
         return data
@@ -232,7 +232,8 @@ class MediaResource(BaseModel):
     def from_dict(cls, data: Dict[str, Any]) -> "MediaResource":
         """Deserialize MediaResource, including decoding base64 data."""
         if "data" in data and data["data"] is not None:
-            data["data"] = base64.b64decode(data["data"])
+            # data["data"] = base64.b64decode(data["data"])
+            data["data"] = data["data"]
         return cls.parse_obj(data)
 
 class TextNode(BaseNode):
@@ -314,8 +315,13 @@ class ImageNode(BaseNode):
                 if ir.data is not None:
                     values["image_loaded"] = True
             elif isinstance(ir, Image.Image):
+                buffer = BytesIO()
+                ir.save(buffer, format=ir.format)
+                data = buffer.getvalue()
+                # b64_str = base64.b64encode(buffer.getvalue())
                 values["image_resource"] = MediaResource(
-                    data=base64.b64encode(ir.tobytes()),
+                    # data=base64.b64encode(ir.tobytes()),
+                    data=data,
                     mimetype=ir.format
                 )
                 values["image_loaded"] = True
@@ -374,8 +380,9 @@ class ImageNode(BaseNode):
     def load_image_data(self) -> None:
         """Load the image from path or URL and store it as base64 data."""
         if self.image_loaded or self.image_resource.data:
-            binary_data = base64.b64decode(self.image_resource.data)
+            binary_data = self.image_resource.data
         elif self.image_resource.path:
+            # Assume base64 encoded data
             with open(self.image_resource.path, 'rb') as f:
                 binary_data = f.read()
             self.image_resource.data = base64.b64encode(binary_data)
@@ -389,7 +396,7 @@ class ImageNode(BaseNode):
         else:
             raise ValueError("No image path or URL provided")
 
-        image = Image.open(BytesIO(binary_data))
+        image = Image.open(BytesIO(base64.b64decode(binary_data)))
         # Guess mimetype from image format if not already set
         if not self.image_resource.mimetype:
             self.image_resource.mimetype = f"image/{image.format.lower()}" if image.format else "image/png"
