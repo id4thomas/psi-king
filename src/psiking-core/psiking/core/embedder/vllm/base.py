@@ -159,6 +159,7 @@ class VLLMOnlineEmbedder(BaseEmbedder):
         dimensions: Optional[int] = None,
         add_special_tokens: bool = False,
         encoding_format: str = "float",
+        timeout: httpx.Timeout = httpx.Timeout(300.0)
     ):
         '''/pooling API
         Request:
@@ -226,6 +227,7 @@ class VLLMOnlineEmbedder(BaseEmbedder):
                     'Authorization': f'Bearer {self.api_key}'
                 },
                 json=body,
+                timeout=timeout
             )
             response.raise_for_status()
             response_json = response.json()
@@ -238,6 +240,7 @@ class VLLMOnlineEmbedder(BaseEmbedder):
         dimensions: Optional[int] = None,
         add_special_tokens: bool = False,
         encoding_format: str = "float",
+        timeout: httpx.Timeout = httpx.Timeout(300.0)
     ):
         '''/pooling API async'''
         body = {
@@ -264,6 +267,7 @@ class VLLMOnlineEmbedder(BaseEmbedder):
                     'Authorization': f'Bearer {self.api_key}'
                 },
                 json=body,
+                timeout=timeout
             )
             response.raise_for_status()
             response_json = response.json()
