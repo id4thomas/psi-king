@@ -2,6 +2,14 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from psiking.core.base.schema import Document
+from psiking.core.storage.vectorstore.schema import (
+    VectorStoreQueryMode,
+    VectorStoreQuery,
+    VectorStoreQueryOptions
+)
+
+DEFAULT_DENSE_VECTOR_NAME = "vector_dense"
+DEFAULT_SPARSE_VECTOR_NAME = "vector_sparse"
 
 class BaseVectorStore(ABC):
     """Vector storage for a single collection"""

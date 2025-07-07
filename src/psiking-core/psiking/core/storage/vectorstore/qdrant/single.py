@@ -19,7 +19,7 @@ from psiking.core.storage.vectorstore.qdrant.base import BaseQdrantVectorStore
 
 if TYPE_CHECKING:
     from qdrant_client import QdrantClient, AsyncQdrantClient
-    from qdrant_client.https.models import PointStruct
+    from qdrant_client.http.models import PointStruct
 
 class QdrantSingleVectorStore(BaseQdrantVectorStore):
     """
@@ -120,9 +120,6 @@ class QdrantSingleVectorStore(BaseQdrantVectorStore):
         pass
     
     def delete(self):
-        pass
-    
-    def query(self):
         pass
 
     def drop(self):
