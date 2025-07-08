@@ -1,0 +1,1 @@
+# BEIR Ingestion Example
