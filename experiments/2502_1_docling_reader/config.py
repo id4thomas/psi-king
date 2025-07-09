@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     vlm_model: str
     
     model_weight_dir: str
-    docling_model_weight_dir: str
+    docling_artifacts_path: str
     
     openai_embedding_base_url: str
     openai_embedding_api_key: str
