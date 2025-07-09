@@ -1,6 +1,7 @@
 import base64
 from collections import defaultdict
 from io import BytesIO
+import json
 from pathlib import Path
 from typing import List, Optional, Union, TYPE_CHECKING
 
@@ -19,6 +20,7 @@ from psiking.core.base.schema import (
 )
 from psiking.core.reader.base import BaseReader
 from psiking.core.reader.image_utils import crop_image
+from psiking.core.reader.schema import ImageDescription
 
 if TYPE_CHECKING:
     from docling.datamodel.pipeline_options import PdfPipelineOptions
@@ -54,6 +56,20 @@ def _convert_bbox_bl_tl(
             x1 / page_width,
             (page_height - y0) / page_height,
         ]
+
+def load_json_string(s):
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        pass
+
+    if s.strip().startswith("```json") and s.strip().endswith("```"):
+        try:
+            json_str = '\n'.join(s.strip().split('\n')[1:-1])
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+    return None
 
 class DoclingPDFReader(BaseReader):
     """Use Docling to extract document structure and content"""
@@ -202,13 +218,37 @@ class DoclingPDFReader(BaseReader):
         # Decode the Base64 data to bytes
         binary_data = base64.b64decode(base64_data)
         
-        # Check for text annotations 
+        # Text
+        ## Caption
+        caption = item.caption_text(doc=document)
+        
+        ## Check for text annotations 
         # example:
         # [PictureDescriptionData(kind='description', text='description here', provenance='not-implemented')]
-        text = item.annotations[0].text if item.annotations else ""
+        # text = item.annotations[0].text if item.annotations else ""
+
+        if item.annotations:
+            annotation_text = item.annotations[0].text
+            annotation_data = load_json_string(annotation_text)
+            if annotation_data is None:
+                text = annotation_text
+            else:
+                try:
+                    image_desc = ImageDescription.model_validate(annotation_data)
+                    text = image_desc.text
+                    description = image_desc.description
+                    if caption:
+                        caption = " ".join([caption, description])
+                    else:
+                        caption=description
+                except Exception as e:
+                    print("[WARNING] ImageDescription validation fail {}".format(str(e)))
+                    # Use Annotation Text
+                    text = annotation_text
+        else:
+            text = ""
         
         # Check for caption
-        caption = item.caption_text(doc=document)
 
         # TODO: add metadata
         if len(item.prov)>0:
