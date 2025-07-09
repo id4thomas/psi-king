@@ -34,11 +34,11 @@ Document Ingestion Flow example:
         * parse using docling & pdf2image
     * models: [`Visualized_BGE` (bge-m3)](https://huggingface.co/BAAI/bge-visualized) + [Qdrant/BM42 (all_miniLM_L6_v2_with_attentions)](https://huggingface.co/Qdrant/all_miniLM_L6_v2_with_attentions)
     * db: qdrant (dense + sparse)
-* ingestion pipeline: [notebook (3_3_allganize_ingestion_multimodal_hybrid)](examples/3_3_allganize_ingestion_multimodal_hybrid.ipynb)
+* ingestion pipeline: [notebook (3_3_allganize_ingestion_multimodal_hybrid)](examples/allganize-rag-evaluation/ingestion_multimodal_hybrid_v2502.ipynb)
     * use 'finance' domain PDF files
 
 Pipeline Overview:
-![3_3_overview](docs/figs/examples/3_3_overview.png)
+![3_3_overview](./examples/allganize-rag-evaluation/figs/ingestion_multimodal_hybrid_overview.png)
 
 ## Experiments
 ### Korean sparse search with vectordb
