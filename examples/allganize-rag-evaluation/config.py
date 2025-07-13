@@ -14,10 +14,16 @@ class Settings(BaseSettings):
     
     docling_artifacts_path: str
     
-    openai_embedding_base_url: str
-    openai_embedding_api_key: str
-    openai_embedding_model: str
+    # Embedding Models
+    text_embedding_base_url: str
+    text_embedding_api_key: str
+    text_embedding_model: str
+    
+    multimodal_embedding_base_url: str
+    multimodal_embedding_api_key: str
+    multimodal_embedding_model: str
     
     qdrant_url: str
+    qdrant_port: int
     
 settings = Settings()
