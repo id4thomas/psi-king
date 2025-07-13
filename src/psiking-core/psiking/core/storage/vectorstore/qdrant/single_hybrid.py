@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
     """
-    qdrant based vectorstore for single vector retrieval
+    qdrant based vectorstore for dense+sparse hybrid vector retrieval
     
     following field names are used by the VectorStore
     * `text`: text for IDF indexing
@@ -48,8 +48,8 @@ class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
         if self._collection_initialized:
             raise ValueError(f"Collection {self.collection_name} already exists")
         self._create_collection(
-            vectors_config={"vector_dense": dense_vector_config},
-            sparse_vectors_config={"vector_sparse": sparse_vector_config},
+            vectors_config={self._dense_vector_name: dense_vector_config},
+            sparse_vectors_config={self._sparse_vector_name: sparse_vector_config},
             **kwargs
         )
         self._collection_initialized = True
@@ -63,8 +63,8 @@ class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
         if self._collection_initialized:
             raise ValueError(f"Collection {self.collection_name} already exists")
         self._acreate_collection(
-            vectors_config={"vector_dense": dense_vector_config},
-            sparse_vectors_config={"vector_sparse": sparse_vector_config},
+            vectors_config={self._dense_vector_name: dense_vector_config},
+            sparse_vectors_config={self._sparse_vector_name: sparse_vector_config},
             **kwargs
         )
         self._collection_initialized = True
@@ -127,8 +127,8 @@ class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
                 id=document.id_,
                 payload=metadata,
                 vector={
-                    "vector_dense": dense_embedding,
-                    "vector_sparse": SparseVector(
+                    self._dense_vector_name: dense_embedding,
+                    self._sparse_vector_name: SparseVector(
                         indices=sparse_index,
                         values=sparse_embedding
                     ),
@@ -214,106 +214,106 @@ class QdrantSingleHybridVectorStore(BaseQdrantVectorStore):
     def delete(self):
         pass
     
-    def _dense_query(
-        self, 
-        dense_embedding: Optional[Union[List[float], List[int]]] = None,
-        limit: int = 10
-    ):
-        # TODO - separate option to be injectable
-        points = self._client.query_points(
-            collection_name=self.collection_name,
-            query=dense_embedding,
-            using="vector_dense",
-            limit=limit
-        )
-        return points
+    # def _dense_query(
+    #     self, 
+    #     dense_embedding: Optional[Union[List[float], List[int]]] = None,
+    #     limit: int = 10
+    # ):
+    #     # TODO - separate option to be injectable
+    #     points = self._client.query_points(
+    #         collection_name=self.collection_name,
+    #         query=dense_embedding,
+    #         using=self._dense_vector_name,
+    #         limit=limit
+    #     )
+    #     return points
     
-    def _sparse_query(
-        self, 
-        sparse_embedding_values: Optional[List[float]] = None,
-        sparse_embedding_indices: Optional[List[int]] = None,
-        limit: int = 10,
-    ):
-        from qdrant_client.http.models import SparseVector
-        # TODO - separate option to be injectable
-        points = self._client.query_points(
-            collection_name=self.collection_name,
-            query=SparseVector(
-                indices=sparse_embedding_indices,
-                values=sparse_embedding_values
-            ),
-            using="vector_sparse",
-            limit=limit
-        )
-        return points
+    # def _sparse_query(
+    #     self, 
+    #     sparse_embedding_values: Optional[List[float]] = None,
+    #     sparse_embedding_indices: Optional[List[int]] = None,
+    #     limit: int = 10,
+    # ):
+    #     from qdrant_client.http.models import SparseVector
+    #     # TODO - separate option to be injectable
+    #     points = self._client.query_points(
+    #         collection_name=self.collection_name,
+    #         query=SparseVector(
+    #             indices=sparse_embedding_indices,
+    #             values=sparse_embedding_values
+    #         ),
+    #         using=self._sparse_vector_name,
+    #         limit=limit
+    #     )
+    #     return points
     
-    def _hybrid_query(
-        self, 
-        dense_embedding: Optional[Union[List[float], List[int]]] = None,
-        sparse_embedding_values: Optional[List[float]] = None,
-        sparse_embedding_indices: Optional[List[int]] = None,
-        limit: int = 10,
-        dense_limit: int = 100,
-        sparse_limit: int = 100,
-    ):
-        from qdrant_client.http.models import Prefetch, Fusion, FusionQuery
-        # TODO - separate option to be injectable
-        points = self._client.query_points(
-            collection_name=self.collection_name,
-            prefetch=[
-                Prefetch(
-                    query={
-                        "values": sparse_embedding_values,
-                        "indices": sparse_embedding_indices
-                    },
-                    using="vector_sparse",
-                    limit=sparse_limit
-                ),
-                Prefetch(
-                    query=dense_embedding,
-                    using="vector_dense",
-                    limit=dense_limit
-                ),
-            ],
-            query=FusionQuery(fusion=Fusion.RRF), # RRF combination
-            limit=limit
-        )
-        return points
+    # def _hybrid_query(
+    #     self, 
+    #     dense_embedding: Optional[Union[List[float], List[int]]] = None,
+    #     sparse_embedding_values: Optional[List[float]] = None,
+    #     sparse_embedding_indices: Optional[List[int]] = None,
+    #     limit: int = 10,
+    #     dense_limit: int = 100,
+    #     sparse_limit: int = 100,
+    # ):
+    #     from qdrant_client.http.models import Prefetch, Fusion, FusionQuery
+    #     # TODO - separate option to be injectable
+    #     points = self._client.query_points(
+    #         collection_name=self.collection_name,
+    #         prefetch=[
+    #             Prefetch(
+    #                 query={
+    #                     "values": sparse_embedding_values,
+    #                     "indices": sparse_embedding_indices
+    #                 },
+    #                 using=self._sparse_vector_name,
+    #                 limit=sparse_limit
+    #             ),
+    #             Prefetch(
+    #                 query=dense_embedding,
+    #                 using=self._dense_vector_name,
+    #                 limit=dense_limit
+    #             ),
+    #         ],
+    #         query=FusionQuery(fusion=Fusion.RRF), # RRF combination
+    #         limit=limit
+    #     )
+    #     return points
     
-    def query(
-        self,
-        mode: Literal["sparse", "dense", "hybrid"] = "hybrid",
-        dense_embedding: Optional[Union[List[float], List[int]]] = None,
-        sparse_embedding_values: Optional[List[float]] = None,
-        sparse_embedding_indices: Optional[List[int]] = None,
-        limit: int = 10,
-        dense_limit: int = 100,
-        sparse_limit: int = 100,
-    ):
-        if mode=="hybrid":
-            points = self._hybrid_query(
-                dense_embedding=dense_embedding,
-                sparse_embedding_values=sparse_embedding_values,
-                sparse_embedding_indices=sparse_embedding_indices,
-                limit=limit,
-                dense_limit=dense_limit,
-                sparse_limit=sparse_limit
-            )
-        elif mode=="dense":
-            points = self._dense_query(
-                dense_embedding=dense_embedding,
-                limit=limit,
-            )
-        elif mode=="sparse":
-            points = self._sparse_query(
-                sparse_embedding_values=sparse_embedding_values,
-                sparse_embedding_indices=sparse_embedding_indices,
-                limit=limit,
-            )
+    # def query(
+    #     self,
+    #     mode: Literal["sparse", "dense", "hybrid"] = "hybrid",
+    #     dense_embedding: Optional[Union[List[float], List[int]]] = None,
+    #     sparse_embedding_values: Optional[List[float]] = None,
+    #     sparse_embedding_indices: Optional[List[int]] = None,
+    #     limit: int = 10,
+    #     dense_limit: int = 100,
+    #     sparse_limit: int = 100,
+    # ):
+    #     if mode=="hybrid":
+    #         points = self._hybrid_query(
+    #             dense_embedding=dense_embedding,
+    #             sparse_embedding_values=sparse_embedding_values,
+    #             sparse_embedding_indices=sparse_embedding_indices,
+    #             limit=limit,
+    #             dense_limit=dense_limit,
+    #             sparse_limit=sparse_limit
+    #         )
+    #     elif mode=="dense":
+    #         points = self._dense_query(
+    #             dense_embedding=dense_embedding,
+    #             limit=limit,
+    #         )
+    #     elif mode=="sparse":
+    #         points = self._sparse_query(
+    #             sparse_embedding_values=sparse_embedding_values,
+    #             sparse_embedding_indices=sparse_embedding_indices,
+    #             limit=limit,
+    #         )
             
-        else:
-            raise NotImplementedError()
-        return points
+    #     else:
+    #         raise NotImplementedError()
+    #     return points
 
     def drop(self):
         pass

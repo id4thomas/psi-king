@@ -207,7 +207,7 @@ class BaseQdrantVectorStore(BaseVectorStore):
     _dense_vector_name="vector_dense"
     _sparse_vector_name="vector_sparse"
     
-    flat_metadata: bool = True
+    flat_metadata: bool = False
     
     def __init__(
         self,
