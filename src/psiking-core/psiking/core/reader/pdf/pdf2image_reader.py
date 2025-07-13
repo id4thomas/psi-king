@@ -39,6 +39,7 @@ class PDF2ImageReader(BaseReader):
     """
     
     _dependencies = ["pdf2image"]
+    _name="PDF2ImageReader"
     
     def __init__(
         self,
@@ -116,7 +117,9 @@ class PDF2ImageReader(BaseReader):
         file_path: str | Path,
         extra_info: Optional[dict] = None,
     ) -> Document:
-        metadata = extra_info or {}
+        metadata = self.default_metadata
+        if extra_info is not None and isinstance(extra_info, dict):
+            metadata = metadata | extra_info
         
         # Convert pdf -> image
         page_images = self._convert_pages(file_path)
@@ -126,7 +129,9 @@ class PDF2ImageReader(BaseReader):
         for page_i, page_image in enumerate(page_images):
             node = self._image_to_node(
                 page_image,
-                metadata={"page": page_i+1}
+                metadata={
+                    "prov": {"page": page_i+1}
+                }
             )
             nodes.append(node)
         
@@ -136,8 +141,7 @@ class PDF2ImageReader(BaseReader):
             metadata=metadata
         )
         return document
-        
-        
+    
     def run(
         self,
         file_path: str | Path,
