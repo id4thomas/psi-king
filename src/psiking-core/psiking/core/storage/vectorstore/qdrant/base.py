@@ -327,7 +327,11 @@ class BaseQdrantVectorStore(BaseVectorStore):
         options: VectorStoreQueryOptions
     ):
         from qdrant_client.http.models import (
+            Fusion,
+            FusionQuery,
+            NamedVector,
             SparseVector,
+            NamedSparseVector,
             Prefetch
         )
         '''SearchRequest is defined here
@@ -349,6 +353,11 @@ class BaseQdrantVectorStore(BaseVectorStore):
                 raise ValueError("query.dense_embedding cannot be None")
             
             search_request['query']=query.dense_embedding
+            # search_request['query']=NamedVector(
+            #     name=self._dense_vector_name,
+            #     vector=query.dense_embedding
+            # )
+            search_request['using']=self._dense_vector_name
             
             # request = SearchRequest(
             #     vector=query.dense_embedding,
@@ -364,6 +373,14 @@ class BaseQdrantVectorStore(BaseVectorStore):
                 indices=query.sparse_embedding_indicies,
                 values=query.sparse_embedding_values
             )
+            search_request['using']=self._sparse_vector_name
+            # search_request['query']=NamedSparseVector(
+            #     name=self._sparse_vector_name,
+            #     vector=SparseVector(
+            #         indices=query.sparse_embedding_indicies,
+            #         values=query.sparse_embedding_values
+            #     )
+            # )
             # request = SearchRequest(
             #     vector=NamedSparseVector(
             #         name=self._sparse_vector_name,
@@ -397,7 +414,14 @@ class BaseQdrantVectorStore(BaseVectorStore):
                     limit=options.dense_top_k
                 ),
             ]
-            search_request['query'] = {"fusion": options.hybrid_fusion_method}
+            if options.hybrid_fusion_method=='rrf':
+                fusion_method=Fusion.RRF
+            elif options.hybrid_fusion_method=='dbsf':
+                fusion_method=Fusion.DBSF
+            else:
+                raise ValueError("Fusion method {} not supported".format(options.hybrid_fusion_method))
+                
+            search_request['query'] = FusionQuery(fusion=fusion_method)
             
             # request = SearchRequest(
             #     vector=NamedSparseVector(
