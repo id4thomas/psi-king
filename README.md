@@ -18,7 +18,7 @@ framework for building multi-modal first document retriever
     * detailed descriptions are available [here](docs/psiking_core.md)
 
 
-### Pipeline Flow
+### Ingestion Pipeline
 Document Ingestion Flow example:
 * (Doc) Collection -> Extraction -> Transformation -> Index(?)
     * Extraction: read file into `Document` instance
@@ -29,16 +29,21 @@ Document Ingestion Flow example:
 
 ## Example
 ### allganize-RAG-Evaluation-Dataset-KO PDF dataset
-* Reading PDF files and indexing into qdrant DB for retrieval
-    * data: real-life pdf files from [`allganize-RAG-Evaluation-Dataset-KO`](https://huggingface.co/datasets/allganize/RAG-Evaluation-Dataset-KO)
-        * parse using docling & pdf2image
-    * models: [`Visualized_BGE` (bge-m3)](https://huggingface.co/BAAI/bge-visualized) + [Qdrant/BM42 (all_miniLM_L6_v2_with_attentions)](https://huggingface.co/Qdrant/all_miniLM_L6_v2_with_attentions)
-    * db: qdrant (dense + sparse)
-* ingestion pipeline: [notebook (3_3_allganize_ingestion_multimodal_hybrid)](examples/allganize-rag-evaluation/ingestion_multimodal_hybrid_v2502.ipynb)
-    * use 'finance' domain PDF files
+Reading PDF files and indexing into qdrant DB for retrieval ([[examples/allganize-rag-evaluation]](./examples/allganize-rag-evaluation/))
+* **data**: real-life pdf files from [`allganize-RAG-Evaluation-Dataset-KO`](https://huggingface.co/datasets/allganize/RAG-Evaluation-Dataset-KO)
+* **models**: [jina-embeddings-v4](https://huggingface.co/jinaai/jina-embeddings-v4-vllm-retrieval/discussions/1) + [Qdrant/BM42](https://huggingface.co/Qdrant/all_miniLM_L6_v2_with_attentions)
+* **db**: qdrant (dense + sparse)
 
-Pipeline Overview:
-![3_3_overview](./examples/allganize-rag-evaluation/figs/ingestion_multimodal_hybrid_overview.png)
+
+**Pipeline Overview**
+![3_3_overview](./examples/allganize-rag-evaluation/docs/figs/ingestion_multimodal_hybrid_overview.png)
+
+
+### BeIR (scifact) Retrieval Benchmark
+Indexing BeIR text retrieval benchmark ([[./examples/beir]](./examples/beir))
+* **data**: `scifact` data from BeIR: [hflink](https://huggingface.co/BeIR)
+* **models**: [bge-m3](https://huggingface.co/BAAI/bge-m3), [Qdrant/BM42](https://huggingface.co/Qdrant/all_miniLM_L6_v2_with_attentions)
+* **db**: qdrant (dense + sparse)
 
 ## Experiments
 ### Korean sparse search with vectordb
