@@ -47,9 +47,9 @@ Indexing BeIR text retrieval benchmark ([[./examples/beir]](./examples/beir))
 
 ## Experiments
 ### Korean sparse search with vectordb
-* pgvector [[docs]](./docs/vectordb/pgvector/korean_text_search_with_pg.md) [[experiments]](./experiments/2502_4_korean_sparse_indexing/1_pgvector/)
+* pgvector [[docs]](./docs/vectordb/pgvector/ko-hybrid-v1.md) [[experiments]](./experiments/korean_db/pgvector/ko-hybrid-v1)
     * use mecab-ko + `textsearch_ko` to enable korean `tsvector` calculation
-* qdrant [[docs]](./docs/vectordb/qdrant/building_with_cjk_lang_support.md) [[experiments]](./experiments/2502_4_korean_sparse_indexing/2_qdrant/)
+* qdrant [[docs]](./docs/vectordb/qdrant/building_with_cjk_lang_support.md) [[experiments]](./experiments/korean_db/qdrant/)
     * build qdrant with cjk language support for korean tokenization
 
 ## Acknowledgements

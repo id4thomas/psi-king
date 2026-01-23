@@ -1,7 +1,7 @@
-# PGVector + textsearch_ko
+# ko-hybrid-v1 (PGVector + textsearch_ko)
 * pgvector로 한국어 hybrid 검색을 위해 `textsearch_ko`를 사용하여 한국어 full-textsearch를 사용한다
     * `select to_tsvector('korean', content) as parsed`
-* 실험 폴더: [link](../../../experiments/2502_4_korean_sparse_indexing/1_pgvector/)
+* 실험 폴더: [link](../../../experiments/korean_db/pgvector/ko-hybrid-v1)
 
 ## Overview
 * `textsearch_ko`: mecab 형태소 분석기를 이용하여 ts_vector를 구현
@@ -35,14 +35,14 @@ Index(
 
 ## Usage
 ### Dockerfile
-* [Dockerfile](../../../experiments/2502_4_korean_sparse_indexing/1_pgvector/Dockerfile)
+* [Dockerfile](../../../experiments/korean_db/pgvector/ko-hybrid-v1/Dockerfile)
 * `pgvector/pgvector` 이미지 기반으로 작업
 * `mecab-ko` 설치 (mecab-ko, mecab-ko-dic)
 * `textsearch_ko` 빌드
 
 ### pg에 한국어 검색 등록
 * `docker-entrypoint-initdb.d`에 초기화 sql을 넣어서 설정 등록을 진행한다
-* [초기화 sql](../../../experiments/2502_4_korean_sparse_indexing/1_pgvector/db-initialization/ts_mecab_ko.sql)
+* [초기화 sql](../../../experiments/korean_db/pgvector/ko-hybrid-v1/db-initialization/ts_mecab_ko.sql)
 ```
 ...
 CREATE TEXT SEARCH PARSER korean (

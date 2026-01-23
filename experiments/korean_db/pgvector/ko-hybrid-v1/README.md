@@ -1,5 +1,5 @@
-# PGVector + mecab for fts
-* [docs](../../../docs/vectordb/pgvector/korean_text_search_with_pg.md)
+# ko-hybrid-v1 (PGVector + mecab for fts)
+* [docs](../../../docs/vectordb/pgvector/ko_hybrid_v1.md)
 
 ## Usage
 ### 1. Build
