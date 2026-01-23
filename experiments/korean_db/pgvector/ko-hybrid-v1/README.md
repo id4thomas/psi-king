@@ -1,5 +1,5 @@
-# ko-hybrid-v1 (PGVector + mecab for fts)
-* [docs](../../../docs/vectordb/pgvector/ko_hybrid_v1.md)
+# pgvector ko-hybrid-v1 (PGVector + mecab for fts)
+* [docs](../../../docs/vectordb/pgvector/ko-hybrid-v1.md)
 
 ## Usage
 ### 1. Build
